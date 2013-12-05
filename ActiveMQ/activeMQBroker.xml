@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:amq="http://activemq.apache.org/schema/core"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
+       http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+
+
+  <!-- 
+    
+    This creates an embedded ActiveMQ Broker 
+    
+    For more details, see http://activemq.apache.org/
+    
+    -->
+  <broker xmlns="http://activemq.apache.org/schema/core" brokerName="broker1" useJmx="true" schedulerSupport="true">
+    <transportConnectors>
+      <transportConnector uri="tcp://localhost:61616"/>
+    </transportConnectors>
+
+    <persistenceAdapter>
+      <kahaDB directory="target/activemq/broker1/data/kahadb"/>
+    </persistenceAdapter>
+    <plugins>
+      <simpleAuthenticationPlugin>
+        <users>
+          <authenticationUser username="admin" password="admin" groups="users,admins"/>
+        </users>
+      </simpleAuthenticationPlugin>      
+    </plugins>
+  </broker>
+
+  <!-- Lets connect the Camel ActiveMQ component to the embedded broker.
+       See http://camel.apache.org/activemq.html for more information.
+  -->
+  <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">
+    <property name="brokerURL" value="failover:tcp://localhost:31316"/>
+    <property name="userName" value="admin"/>
+    <property name="password" value="admin"/>
+    <property name="preserveMessageQos" value="true"/>
+    <property name="explicitQosEnabled" value="true"/>
+  </bean>
+
+  <!-- tell Camel to use localhost as the JMX MBean naming to have a fixed name style -->
+  <bean id="managementName" class="org.apache.camel.management.DefaultManagementNamingStrategy">
+      <!-- the hostname does not have to be resolvable, it can be any value you want -->
+      <property name="hostName" value="localhost"/>
+      <property name="domainName" value="org.apache.camel"/>
+  </bean>
+</beans>
+
